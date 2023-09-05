@@ -9,7 +9,7 @@ import (
 
 var Config Yaml
 
-var PATH_LIST = []string{
+var PathList = []string{
 	"app.yaml",
 	"app.yml",
 	"config/app.yaml",
@@ -35,7 +35,7 @@ func Init(conf ...string) {
 		}
 		log.Println(fmt.Sprintf("load config path [%db]%s", len(fileBytes), path))
 	} else {
-		for _, path := range PATH_LIST {
+		for _, path := range PathList {
 			fileBytes, err := ioutil.ReadFile(path)
 			if err != nil {
 				continue

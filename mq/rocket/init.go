@@ -5,8 +5,7 @@ import (
 	"go-plus/yaml"
 )
 
-//初始化mq
-func InitMq() {
+func Init() {
 	rlog.SetLogLevel(yaml.Config.Mq.RocketMq.LogLevel)
 	for _, message := range consumers {
 		go initConsumer(message)
