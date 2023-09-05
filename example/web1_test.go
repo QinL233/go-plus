@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	app "go-plus"
-	"go-plus/gin/api"
 	"go-plus/orm/mysql"
+	"go-plus/web"
 	"mime/multipart"
 	"testing"
 )
@@ -46,7 +46,7 @@ type DemoResult struct {
 
 //2、定义service接口并实现
 type DemoService struct {
-	api.BaseService
+	web.BaseService
 	DemoParam
 }
 
@@ -65,11 +65,11 @@ func (s *DemoService) get(param *DemoParam) (*DemoResult, error) {
 
 //3、定义controller
 func DemoController(c *gin.Context) {
-	(&api.Controller[*DemoService]{Context: c}).Form()
+	(&web.Controller[*DemoService]{Context: c}).Form()
 }
 
 func TestWeb1(t *testing.T) {
-	api.Api(func(g *gin.RouterGroup) {
+	web.Router(func(g *gin.RouterGroup) {
 		g.POST("/demo", DemoController)
 	})
 	app.Start("config/app.yml")

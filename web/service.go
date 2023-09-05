@@ -1,4 +1,4 @@
-package api
+package web
 
 /**
 定义service通用接口

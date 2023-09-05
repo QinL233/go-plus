@@ -11,7 +11,6 @@ type Client struct {
 
 func (p *Client) Set(key string, value interface{}, second int) error {
 	c := driver.Get()
-	//函数调用完毕释放
 	defer c.Close()
 
 	bytes, err := json.Marshal(value)

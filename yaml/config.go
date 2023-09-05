@@ -3,7 +3,7 @@ package yaml
 import "time"
 
 type Yaml struct {
-	Gin struct {
+	Web struct {
 		Prefix       string        `json:"prefix"`
 		Port         int           `yaml:"port"`
 		Mode         string        `yaml:"mode"`
@@ -24,7 +24,7 @@ type Yaml struct {
 				} `yaml:"mysql"`
 			} `yaml:"client"`
 		} `yaml:"log"`
-	} `yaml:"gin"`
+	} `yaml:"web"`
 	Orm struct {
 		Mysql struct {
 			Host     string `yaml:"host"`

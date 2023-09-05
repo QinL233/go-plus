@@ -1,4 +1,4 @@
-package api
+package web
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,11 +8,23 @@ import (
 )
 
 /**
-参数解析器
-1、分组各类传参
-2、传参校验
-3、根据传参转发到指定handler
-4、封装返回
+路由表 - 用于注册controller的入口
+*/
+
+var routers []func(g *gin.RouterGroup)
+
+// Router 用于controller注册路由
+func Router(controllers ...func(g *gin.RouterGroup)) {
+	if routers == nil {
+		routers = make([]func(g *gin.RouterGroup), 0)
+	}
+	for _, controller := range controllers {
+		routers = append(routers, controller)
+	}
+}
+
+/**
+controller执行器
 */
 
 type Controller[S Service] struct {

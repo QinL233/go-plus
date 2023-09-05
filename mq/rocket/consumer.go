@@ -15,7 +15,7 @@ import (
 rocketMQ consumer client
 */
 
-var consumers = make([]Message, 0)
+var consumers []Message
 
 type Message struct {
 	//组和主题地址映射
@@ -26,9 +26,12 @@ type Message struct {
 }
 
 // Consumer 用于注册消费端
-func Consumer(f []Message) {
-	for _, handler := range f {
-		consumers = append(consumers, handler)
+func Consumer(messages ...Message) {
+	if consumers == nil {
+		consumers = make([]Message, 0)
+	}
+	for _, message := range messages {
+		consumers = append(consumers, message)
 	}
 }
 
