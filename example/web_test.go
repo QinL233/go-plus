@@ -2,10 +2,10 @@ package example
 
 import (
 	"fmt"
+	"github.com/QinL233/go-plus"
+	"github.com/QinL233/go-plus/orm/mysql"
+	"github.com/QinL233/go-plus/web"
 	"github.com/gin-gonic/gin"
-	app "go-plus"
-	"go-plus/orm/mysql"
-	"go-plus/web"
 	"mime/multipart"
 	"testing"
 )
@@ -68,7 +68,7 @@ func DemoController(c *gin.Context) {
 	(&web.Controller[*DemoService]{Context: c}).Form()
 }
 
-func TestWeb1(t *testing.T) {
+func TestWeb(t *testing.T) {
 	web.Router(func(g *gin.RouterGroup) {
 		g.POST("/demo", DemoController)
 	})

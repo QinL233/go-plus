@@ -2,8 +2,8 @@ package redis
 
 import (
 	"fmt"
+	"github.com/QinL233/go-plus/yaml"
 	"github.com/gomodule/redigo/redis"
-	"go-plus/yaml"
 	"log"
 	"time"
 )

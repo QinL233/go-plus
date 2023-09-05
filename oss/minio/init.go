@@ -2,8 +2,8 @@ package minio
 
 import (
 	"fmt"
+	"github.com/QinL233/go-plus/yaml"
 	"github.com/minio/minio-go"
-	"go-plus/yaml"
 	"log"
 )
 

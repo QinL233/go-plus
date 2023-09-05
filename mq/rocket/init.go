@@ -1,8 +1,8 @@
 package rocket
 
 import (
+	"github.com/QinL233/go-plus/yaml"
 	"github.com/apache/rocketmq-client-go/v2/rlog"
-	"go-plus/yaml"
 )
 
 func Init() {

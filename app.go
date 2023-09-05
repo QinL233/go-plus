@@ -1,13 +1,13 @@
 package app
 
 import (
-	"go-plus/cache/redis"
-	"go-plus/mq/rocket"
-	"go-plus/orm/elastic"
-	"go-plus/orm/mysql"
-	"go-plus/oss/minio"
-	"go-plus/web"
-	"go-plus/yaml"
+	"github.com/QinL233/go-plus/cache/redis"
+	"github.com/QinL233/go-plus/mq/rocket"
+	"github.com/QinL233/go-plus/orm/elastic"
+	"github.com/QinL233/go-plus/orm/mysql"
+	"github.com/QinL233/go-plus/oss/minio"
+	"github.com/QinL233/go-plus/web"
+	"github.com/QinL233/go-plus/yaml"
 )
 
 /**

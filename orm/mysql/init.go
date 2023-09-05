@@ -2,7 +2,7 @@ package mysql
 
 import (
 	"fmt"
-	"go-plus/yaml"
+	"github.com/QinL233/go-plus/yaml"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

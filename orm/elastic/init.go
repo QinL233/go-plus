@@ -1,8 +1,8 @@
 package elastic
 
 import (
+	"github.com/QinL233/go-plus/yaml"
 	"github.com/olivere/elastic/v7"
-	"go-plus/yaml"
 	"log"
 	"os"
 )

@@ -1,4 +1,4 @@
-module go-plus
+module github.com/QinL233/go-plus
 
 go 1.18
 
