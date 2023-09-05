@@ -25,7 +25,7 @@ type Yaml struct {
 			} `yaml:"client"`
 		} `yaml:"log"`
 	} `yaml:"gin"`
-	Gorm struct {
+	Orm struct {
 		Mysql struct {
 			Host     string `yaml:"host"`
 			Port     int    `yaml:"port"`
@@ -33,7 +33,10 @@ type Yaml struct {
 			Password string `yaml:"password"`
 			Database string `yaml:"database"`
 		} `yaml:"mysql"`
-	} `yaml:"gorm"`
+		Elastic struct {
+			Url string `yaml:"url"`
+		} `yaml:"elastic"`
+	} `yaml:"orm"`
 	Cache struct {
 		Redis struct {
 			Host        string        `yaml:"host"`
@@ -62,7 +65,4 @@ type Yaml struct {
 			LogLevel string `yaml:"logLevel"`
 		} `yaml:"rocketMq"`
 	} `yaml:"mq"`
-	Elastic struct {
-		Url string `yaml:"url"`
-	} `yaml:"elastic"`
 }

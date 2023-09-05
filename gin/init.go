@@ -3,6 +3,8 @@ package gin
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go-plus/gin/api"
+	"go-plus/gin/interceptor"
 	"go-plus/yaml"
 	"log"
 	"net/http"
@@ -33,23 +35,29 @@ func Init() {
 	r.Use(gin.Recovery())
 
 	//自定义拦截器
-	for _, interceptor := range interceptorTables {
+	for _, interceptor := range interceptor.Tables {
 		r.Use(interceptor)
 	}
 
 	//自定义路由表
-	InitRouter(r, yaml.Config.Gin.Prefix)
+	router := r.Group(yaml.Config.Gin.Prefix)
+	for _, controller := range api.Tables {
+		controller(router)
+	}
 
 	//级别
 	gin.SetMode(yaml.Config.Gin.Mode)
 
 	//创建服务并启动
 	log.Printf("start gin http server listening port[%d]", yaml.Config.Gin.Port)
-	(&http.Server{
+	err := (&http.Server{
 		Addr:           fmt.Sprintf(":%d", yaml.Config.Gin.Port),
 		Handler:        r,
 		ReadTimeout:    yaml.Config.Gin.ReadTimeout,
 		WriteTimeout:   yaml.Config.Gin.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}).ListenAndServe()
+	if err != nil {
+		log.Fatalf("gin server err %v", err)
+	}
 }

@@ -2,35 +2,75 @@ package example
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	app "go-plus"
-	"go-plus/gin"
+	"go-plus/gin/api"
+	"go-plus/orm/mysql"
+	"mime/multipart"
 	"testing"
 )
 
-type testService struct {
-	db string
+/*
+Controller 负责请求出入口处理
+1、负责路由入口【api、request_type】
+2、【重点】负责参数校验【query、path、body..取参数、校验】
+3、负责结果包装【不仅是统一的response，还有具体data的控制权】
+4、负责api错误的【汇总以及打印】
+
+Service 负责做业务处理
+1、有且仅有一个service接口，一个文件夹是一个实现，一个.go实现一个方法【便于管理】
+2、参数从方法参数传递，输出使用指针：func(...*param) (*result,err)【统一】
+3、service.go中定义的param和result尽量不要循环引用
+4、函数的实现保证参数校验、原子性、健壮性【规范】
+5、在抽象类中定义全局以保证多个service传递中实现事务、全局变量的传递性【db传递】
+
+Dao db-driver处理
+1、处理单表的基础增删改查【crud-可封装】
+2、处理数据的事务和异常，确保数据的完整性和一致性【db传递事务】
+
+Model 负责定义数据结构
+1、定义db表数据结构，包括表的字段、索引、结构体与表结构一致【table】
+2、定义request和response结构，包括请求参数、返回结果、返回的错误信息【class】
+*/
+
+//1、定义param和result的class
+type DemoParam struct {
+	Name string                `form:"name" binding:"required"`
+	File *multipart.FileHeader `form:"file"`
 }
 
-func (s *testService) handler() {
-	fmt.Println(fmt.Sprintf("test %p", s))
+type DemoResult struct {
+	Password string `json:"password"`
+	Ids      []int  `json:"ids"`
 }
 
-func (s *testService) handler2() {
-	fmt.Println(fmt.Sprintf("test %p", s))
+//2、定义service接口并实现
+type DemoService struct {
+	api.BaseService
+	DemoParam
 }
 
-func TestHttp(t *testing.T) {
-	gin.Router(
-		&gin.Controller{
-			Method:  gin.GET,
-			Api:     "/demo",
-			Service: (&testService{}).handler,
-		},
-		&gin.Controller{
-			Method:  gin.GET,
-			Api:     "/demo2",
-			Service: (&testService{}).handler2,
-		},
-	)
+func (s *DemoService) Exec() (any, error) {
+	return s.get(&s.DemoParam)
+}
+
+func (s *DemoService) get(param *DemoParam) (*DemoResult, error) {
+	fmt.Printf("%v", param)
+	r := DemoResult{
+		Password: "123456",
+	}
+	mysql.Driver().Raw("select id from template limit 10").Find(&r.Ids)
+	return &r, nil
+}
+
+//3、定义controller
+func DemoController(c *gin.Context) {
+	(&api.Controller[*DemoService]{Context: c}).Form()
+}
+
+func TestWeb1(t *testing.T) {
+	api.Api(func(g *gin.RouterGroup) {
+		g.POST("/demo", DemoController)
+	})
 	app.Start("config/app.yml")
 }

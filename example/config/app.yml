@@ -17,13 +17,15 @@ gin:
         username: root
         password: qazwsx123!
         database: intellect
-gorm:
+orm:
   mysql:
     host: 172.17.181.4
     port: 3306
     username: root
     password: qazwsx123!
     database: intellect
+  elastic:
+    url: http://172.17.181.4:9200
 cache:
   redis:
     host: 172.17.181.4
@@ -46,5 +48,4 @@ mq:
   rocketMq:
     url: http://172.17.181.4:9876
     logLevel: warn
-elastic:
-  url: http://172.17.181.4:9200
+

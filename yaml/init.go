@@ -22,6 +22,7 @@ var PATH_LIST = []string{
  * 加载配置文件
  * 文件路径按：传参 > app.yaml&yml > config/app.yaml&yml > conf/app.yaml&yml
  */
+
 func Init(conf ...string) {
 	if len(conf) > 0 {
 		path := conf[0]
