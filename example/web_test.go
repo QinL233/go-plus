@@ -35,7 +35,7 @@ Model 负责定义数据结构
 
 //1、定义param和result的class
 type DemoParam struct {
-	Name string                `form:"name" binding:"required"`
+	Name string                `uri:"name" binding:"required"`
 	File *multipart.FileHeader `form:"file"`
 }
 
@@ -45,32 +45,26 @@ type DemoResult struct {
 }
 
 //2、定义service接口并实现
-type DemoService struct {
-	web.BaseService
-	DemoParam
-}
-
-func (s *DemoService) Exec() (any, error) {
-	return s.get(&s.DemoParam)
-}
-
-func (s *DemoService) get(param *DemoParam) (*DemoResult, error) {
+func get(param DemoParam) (DemoResult, error) {
 	fmt.Printf("%v", param)
 	r := DemoResult{
 		Password: "123456",
 	}
 	mysql.Driver().Raw("select id from template limit 10").Find(&r.Ids)
-	return &r, nil
+	return r, nil
 }
 
 //3、定义controller
 func DemoController(c *gin.Context) {
-	(&web.Controller[*DemoService]{Context: c}).Form()
+	web.BaseService[DemoParam, DemoResult](c, get)
 }
 
 func TestWeb(t *testing.T) {
 	web.Router(func(g *gin.RouterGroup) {
-		g.POST("/demo", DemoController)
+		g.GET("/query", DemoController)
+		g.GET("/path/:name", DemoController)
+		g.POST("/json", DemoController)
+		g.POST("/form", DemoController)
 	})
 	app.Start("config/app.yml")
 }

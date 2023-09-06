@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/QinL233/go-plus/cache/redis"
+	"github.com/QinL233/go-plus/log"
 	"github.com/QinL233/go-plus/mq/rocket"
 	"github.com/QinL233/go-plus/orm/elastic"
 	"github.com/QinL233/go-plus/orm/mysql"
@@ -16,6 +17,7 @@ import (
 
 func Start(conf ...string) {
 	yaml.Init(conf...)
+	log.Init()
 	mysql.Init()
 	elastic.Init()
 	redis.Init()

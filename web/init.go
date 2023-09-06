@@ -26,11 +26,9 @@ func init() {
 
 // Init 对外提供初始化路由的方法
 func Init() {
-	r := gin.New()
-	//默认日志
-	r.Use(gin.Logger())
-	//500
-	r.Use(gin.Recovery())
+	//级别
+	gin.SetMode(yaml.Config.Web.Mode)
+	r := gin.Default()
 
 	//自定义拦截器
 	for _, interceptor := range interceptors {
@@ -39,12 +37,9 @@ func Init() {
 
 	//自定义路由表
 	router := r.Group(yaml.Config.Web.Prefix)
-	for _, controller := range routers {
+	for _, controller := range controllers {
 		controller(router)
 	}
-
-	//级别
-	gin.SetMode(yaml.Config.Web.Mode)
 
 	//创建服务并启动
 	log.Printf("start gin http server listening port[%d]", yaml.Config.Web.Port)

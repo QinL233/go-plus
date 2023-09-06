@@ -47,7 +47,7 @@ func Init() {
 	db.SetMaxIdleConns(10)
 	db.SetMaxOpenConns(100)
 
-	log.Printf("mysql connect success!")
+	log.Println("mysql connect success!")
 }
 
 //从连接池获取连接

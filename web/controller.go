@@ -2,7 +2,6 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -11,71 +10,73 @@ import (
 路由表 - 用于注册controller的入口
 */
 
-var routers []func(g *gin.RouterGroup)
+var controllers []func(g *gin.RouterGroup)
 
 // Router 用于controller注册路由
-func Router(controllers ...func(g *gin.RouterGroup)) {
-	if routers == nil {
-		routers = make([]func(g *gin.RouterGroup), 0)
+func Router(list ...func(g *gin.RouterGroup)) {
+	if controllers == nil {
+		controllers = make([]func(g *gin.RouterGroup), 0)
 	}
-	for _, controller := range controllers {
-		routers = append(routers, controller)
+	for _, controller := range list {
+		controllers = append(controllers, controller)
 	}
 }
 
 /**
-controller执行器
+Service - 工具
+1、用于快速从context实现做提取param并校验
+2、封装service.func(param)(result,err)方法的返回
 */
 
-type Controller[S Service] struct {
-	*gin.Context
-}
-
-func (c *Controller[S]) Query() {
-	var service S
-	if err := c.Context.ShouldBindQuery(&service); err != nil {
-		log.Println(err)
-		fail(c.Context, 500, errors.New("param is fail"))
-		return
+func BaseService[P any, R any](c *gin.Context, f func(P) (R, error)) {
+	var param P
+	if c.Params != nil && len(c.Params) > 0 {
+		//uri请求 - 必须注意service使用`uri:"paramName"`接收
+		if err := c.ShouldBindUri(&param); err != nil {
+			log.Println(err)
+			fail(c, 500, errors.New("param is fail"))
+			return
+		}
+	} else {
+		//query/json/form请求
+		if err := c.ShouldBind(&param); err != nil {
+			log.Println(err)
+			fail(c, 500, errors.New("param is fail"))
+			return
+		}
 	}
-	c.handler(service)
-}
-
-func (c *Controller[S]) Path() {
-	var service S
-	if err := c.Context.ShouldBindUri(&service); err != nil {
-		log.Println(err)
-		fail(c.Context, 500, errors.New("param is fail"))
-		return
-	}
-	c.handler(service)
-}
-
-func (c *Controller[S]) Body() {
-	var service S
-	if err := c.Context.ShouldBindJSON(&service); err != nil {
-		log.Println(err)
-		fail(c.Context, 500, errors.New("param is fail"))
-		return
-	}
-	c.handler(service)
-}
-
-func (c *Controller[S]) Form() {
-	var service S
-	if err := c.Context.ShouldBindWith(&service, binding.FormMultipart); err != nil {
-		log.Println(err)
-		fail(c.Context, 500, errors.New("param is fail"))
-		return
-	}
-	c.handler(service)
-}
-
-func (c *Controller[S]) handler(service S) {
-	r, err := service.handler(service)
+	r, err := f(param)
 	if err != nil {
-		fail(c.Context, 500, err)
+		fail(c, 500, err)
 		return
 	}
-	success(c.Context, r)
+	success(c, r)
+}
+
+/**
+封装标准的返回格式
+*/
+
+type JSON struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data any    `json:"data"`
+}
+
+func success(c *gin.Context, data any) {
+	c.JSON(200, JSON{
+		Code: 200,
+		Msg:  "success",
+		Data: data,
+	})
+	return
+}
+
+func fail(c *gin.Context, code int, err error) {
+	c.JSON(200, JSON{
+		Code: code,
+		Msg:  err.Error(),
+		Data: nil,
+	})
+	return
 }

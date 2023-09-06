@@ -9,22 +9,11 @@ type Yaml struct {
 		Mode         string        `yaml:"mode"`
 		ReadTimeout  time.Duration `yaml:"readTimeout"`
 		WriteTimeout time.Duration `yaml:"writeTimeout"`
-		Log          struct {
-			Filters []string `yaml:"filters"`
-			Client  struct {
-				Logstash struct {
-					Url string `yaml:"url"`
-				} `yaml:"logstash"`
-				Mysql struct {
-					Host     string `yaml:"host"`
-					Port     int    `yaml:"port"`
-					Username string `yaml:"username"`
-					Password string `yaml:"password"`
-					Database string `yaml:"database"`
-				} `yaml:"mysql"`
-			} `yaml:"client"`
-		} `yaml:"log"`
 	} `yaml:"web"`
+	Logstash struct {
+		Tag string `yaml:"tag"`
+		Url string `yaml:"url"`
+	} `yaml:"logstash"`
 	Orm struct {
 		Mysql struct {
 			Host     string `yaml:"host"`
