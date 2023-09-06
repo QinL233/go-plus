@@ -56,11 +56,11 @@ func get(param DemoParam) (DemoResult, error) {
 
 //3、定义controller
 func DemoController(c *gin.Context) {
-	web.BaseService[DemoParam, DemoResult](c, get)
+	web.Service[DemoParam, DemoResult](c, get)
 }
 
 func TestWeb(t *testing.T) {
-	web.Router(func(g *gin.RouterGroup) {
+	web.Controller(func(g *gin.RouterGroup) {
 		g.GET("/query", DemoController)
 		g.GET("/path/:name", DemoController)
 		g.POST("/json", DemoController)

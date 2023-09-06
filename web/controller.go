@@ -12,8 +12,8 @@ import (
 
 var controllers []func(g *gin.RouterGroup)
 
-// Router 用于controller注册路由
-func Router(list ...func(g *gin.RouterGroup)) {
+// Controller 用于controller注册路由
+func Controller(list ...func(g *gin.RouterGroup)) {
 	if controllers == nil {
 		controllers = make([]func(g *gin.RouterGroup), 0)
 	}
@@ -28,7 +28,7 @@ Service - 工具
 2、封装service.func(param)(result,err)方法的返回
 */
 
-func BaseService[P any, R any](c *gin.Context, f func(P) (R, error)) {
+func Service[P any, R any](c *gin.Context, f func(P) (R, error)) {
 	var param P
 	if c.Params != nil && len(c.Params) > 0 {
 		//uri请求 - 必须注意service使用`uri:"paramName"`接收
