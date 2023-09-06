@@ -35,8 +35,9 @@ Model 负责定义数据结构
 
 //1、定义param和result的class
 type DemoParam struct {
-	Name string                `uri:"name" binding:"required"`
-	File *multipart.FileHeader `form:"file"`
+	Name  string                `form:"name" binding:"required"`
+	File  *multipart.FileHeader `form:"file"`
+	Token string                `header:"token" binding:"required"`
 }
 
 type DemoResult struct {

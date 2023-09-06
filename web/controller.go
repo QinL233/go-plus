@@ -30,26 +30,31 @@ Service - 工具
 
 func Service[P any, R any](c *gin.Context, f func(P) (R, error)) {
 	var param P
+	//1、尝试从header中取得参数【不保证校验】 - 获取`header:"paramName"`
+	c.BindHeader(&param)
+	//2、根据参数性质bind参数
 	if c.Params != nil && len(c.Params) > 0 {
 		//uri请求 - 必须注意service使用`uri:"paramName"`接收
-		if err := c.ShouldBindUri(&param); err != nil {
+		if err := c.BindUri(&param); err != nil {
 			log.Println(err)
 			fail(c, 500, errors.New("param is fail"))
 			return
 		}
 	} else {
 		//query/json/form请求
-		if err := c.ShouldBind(&param); err != nil {
+		if err := c.Bind(&param); err != nil {
 			log.Println(err)
 			fail(c, 500, errors.New("param is fail"))
 			return
 		}
 	}
+	//3、回调方法
 	r, err := f(param)
 	if err != nil {
 		fail(c, 500, err)
 		return
 	}
+	//4、封装返回
 	success(c, r)
 }
 
