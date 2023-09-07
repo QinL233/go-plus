@@ -45,7 +45,6 @@ type Yaml struct {
 			SecretKey string `yaml:"secretKey"`
 			Secure    bool   `yaml:"secure"`
 			Bucket    string `yaml:"bucket"`
-			Prefix    string `json:"prefix"`
 		} `yaml:"minio"`
 	} `yaml:"oss"`
 	Mq struct {
