@@ -6,6 +6,7 @@ import (
 	"github.com/QinL233/go-plus/orm/mysql"
 	"github.com/QinL233/go-plus/web"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"mime/multipart"
 	"testing"
 )
@@ -55,9 +56,19 @@ func get(param DemoParam) (DemoResult, error) {
 	return r, nil
 }
 
+func get2(db *gorm.DB, param DemoParam) (DemoResult, error) {
+	fmt.Printf("%v", param)
+	r := DemoResult{
+		Password: "123456",
+	}
+	db.Raw("select id from template limit 10").Find(&r.Ids)
+	return r, nil
+}
+
 //3、定义controller
 func DemoController(c *gin.Context) {
-	web.Service[DemoParam, DemoResult](c, get)
+	//web.Service[DemoParam, DemoResult](c, get)
+	web.DBService[DemoParam, DemoResult](c, get2)
 }
 
 func TestWeb(t *testing.T) {
