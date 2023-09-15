@@ -18,16 +18,16 @@ func Service[P any, R any](c *gin.Context, f func(P) (R, error)) {
 	param, err := contextExtractParam[P](c)
 	if err != nil {
 		log.Println(err)
-		fail(c, 500, err)
+		Fail(c, 500, err)
 		return
 	}
 	//回调方法
 	r, err := f(*param)
 	if err != nil {
-		fail(c, 500, err)
+		Fail(c, 500, err)
 		return
 	}
-	success(c, r)
+	Success(c, r)
 }
 
 /**
@@ -38,16 +38,16 @@ func DBService[P any, R any](c *gin.Context, f func(db *gorm.DB, param P) (R, er
 	param, err := contextExtractParam[P](c)
 	if err != nil {
 		log.Println(err)
-		fail(c, 500, err)
+		Fail(c, 500, err)
 		return
 	}
 	//回调方法
 	r, err := f(mysql.Driver(), *param)
 	if err != nil {
-		fail(c, 500, err)
+		Fail(c, 500, err)
 		return
 	}
-	success(c, r)
+	Success(c, r)
 }
 
 //从context中提取参数到P中
