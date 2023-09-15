@@ -17,7 +17,7 @@ import (
 日志记录到logstash中
 */
 
-var client *logrus.Logger
+var driver *logrus.Logger
 
 func initLogstash() {
 	config := yaml.Config.Logstash
@@ -25,15 +25,15 @@ func initLogstash() {
 		log.Println("logstash config is empty")
 		return
 	}
-	client = logrus.New()
-	client.SetLevel(logrus.DebugLevel)
+	driver = logrus.New()
+	driver.SetLevel(logrus.DebugLevel)
 	conn, err := net.Dial("tcp", config.Url)
 	if err != nil {
-		client.Fatal(err)
+		driver.Fatal(err)
 	}
 	hook := logstash.New(conn, logstash.DefaultFormatter(logrus.Fields{"tag": config.Tag}))
 
-	client.Hooks.Add(hook)
+	driver.Hooks.Add(hook)
 
 	log.Println("logstash connect success!")
 	//添加一个web拦截器用于记录日志
@@ -41,8 +41,9 @@ func initLogstash() {
 }
 
 func logstashInterceptor(c *gin.Context) {
-	log := client.WithFields(logrus.Fields{
+	logClient := driver.WithFields(logrus.Fields{
 		"client": c.ClientIP(),
+		"code":   c.Writer.Status(),
 		"header": c.Request.Header,
 		"method": c.Request.Method,
 		"url":    c.Request.URL.Path,
@@ -50,12 +51,16 @@ func logstashInterceptor(c *gin.Context) {
 	if c.ContentType() == binding.MIMEJSON {
 		body, err := c.GetRawData()
 		if err != nil {
-			log.Printf("logstash read web request body err %v", err)
+			go logClient.Printf("logstash read web request body err %v", err)
 		}
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-		log.Info(string(body))
+		go logClient.Info(string(body))
 	} else {
-		log.Info("")
+		go logClient.Info("")
 	}
 	c.Next()
+}
+
+func Driver() *logrus.Logger {
+	return driver
 }
