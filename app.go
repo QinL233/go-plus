@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/QinL233/go-plus/cache/redis"
+	"github.com/QinL233/go-plus/cron"
 	"github.com/QinL233/go-plus/log"
 	"github.com/QinL233/go-plus/mq/rocket"
 	"github.com/QinL233/go-plus/orm/elastic"
@@ -23,5 +24,6 @@ func Start(conf ...string) {
 	redis.Init()
 	minio.Init()
 	rocket.Init()
+	cron.Init()
 	web.Init()
 }
