@@ -6,6 +6,7 @@ import (
 	"github.com/QinL233/go-plus/orm/mysql"
 	"github.com/QinL233/go-plus/web"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"mime/multipart"
 	"testing"
@@ -61,12 +62,16 @@ func get2(db *gorm.DB, param DemoParam) (result []DemoResult, err error) {
 	fmt.Printf("%v", param)
 	r := DemoResult{}
 	r.Password = "123456"
-	if err = db.Raw("select id from template limit 10").Find(&r.Ids).Error; err != nil {
-		return
+	if err = db.Raw("select ids from template limit 10").Find(&r.Ids).Error; err != nil {
+		panic(err)
 	}
 	testErr(func() {
-		//err = errors.New("test")
-		result = make([]DemoResult, 0)
+		if true {
+			fmt.Printf("100")
+			err = errors.New("test")
+			panic(err)
+			fmt.Printf("200")
+		}
 	})
 	return
 }

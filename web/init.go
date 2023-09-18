@@ -30,6 +30,16 @@ func Init() {
 	gin.SetMode(yaml.Config.Web.Mode)
 	r := gin.Default()
 
+	//全局异常处理
+	r.Use(func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				Fail(c, 500, err.(error))
+			}
+		}()
+		c.Next()
+	})
+
 	//自定义拦截器
 	for _, interceptor := range interceptors {
 		r.Use(interceptor)
