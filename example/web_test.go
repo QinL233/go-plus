@@ -57,19 +57,28 @@ func get(param DemoParam) (DemoResult, error) {
 	return r, nil
 }
 
-func get2(db *gorm.DB, param DemoParam) (DemoResult, error) {
+func get2(db *gorm.DB, param DemoParam) (result []DemoResult, err error) {
 	fmt.Printf("%v", param)
-	r := DemoResult{
-		Password: "123456",
+	r := DemoResult{}
+	r.Password = "123456"
+	if err = db.Raw("select id from template limit 10").Find(&r.Ids).Error; err != nil {
+		return
 	}
-	db.Raw("select id from template limit 10").Find(&r.Ids)
-	return r, nil
+	testErr(func() {
+		//err = errors.New("test")
+		result = make([]DemoResult, 0)
+	})
+	return
+}
+
+func testErr(f func()) {
+	f()
 }
 
 //3、定义controller
 func DemoController(c *gin.Context) {
 	//web.Service[DemoParam, DemoResult](c, get)
-	web.DBService[DemoParam, DemoResult](c, get2)
+	web.DBService[DemoParam, []DemoResult](c, get2)
 }
 
 func TestWeb(t *testing.T) {

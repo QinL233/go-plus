@@ -46,6 +46,9 @@ func parserResponse(data any) any {
 	if t == nil {
 		return Response{200, "success", nil}
 	}
+	if t.Kind() != reflect.Struct {
+		return Response{200, "success", data}
+	}
 	_, d1 := t.FieldByName("Code")
 	if !d1 {
 		return Response{200, "success", data}
