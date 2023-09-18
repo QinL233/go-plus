@@ -54,16 +54,19 @@ func DBService[P any, R any](c *gin.Context, f func(db *gorm.DB, param P) (R, er
 func contextExtractParam[P any](c *gin.Context) (*P, error) {
 	var param P
 	//1、尝试从header中取得参数【不保证校验】 - 获取`header:"paramName"`
-	c.ShouldBindHeader(&param)
+	err := c.ShouldBindHeader(&param)
+	if err != nil {
+		log.Println(err)
+	}
 	//2、根据参数性质bind参数
 	if c.Params != nil && len(c.Params) > 0 {
 		//uri请求 - 必须注意service使用`uri:"paramName"`接收
-		if err := c.ShouldBindUri(&param); err != nil {
+		if err = c.ShouldBindUri(&param); err != nil {
 			return nil, errors.New("param is fail")
 		}
 	} else {
 		//query/json/form请求
-		if err := c.ShouldBind(&param); err != nil {
+		if err = c.ShouldBind(&param); err != nil {
 			return nil, errors.New("param is fail")
 		}
 	}
