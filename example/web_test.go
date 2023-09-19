@@ -3,12 +3,14 @@ package example
 import (
 	"fmt"
 	"github.com/QinL233/go-plus"
+	//"github.com/QinL233/go-plus/docs"
 	"github.com/QinL233/go-plus/orm/mysql"
 	"github.com/QinL233/go-plus/web"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"mime/multipart"
+	"net/http"
 	"testing"
 )
 
@@ -76,6 +78,20 @@ func get2(db *gorm.DB, param DemoParam) (result []DemoResult, err error) {
 	return
 }
 
+func get3(db *gorm.DB, param DemoParam) (r DemoResult, err error) {
+	res, err := http.Get("https://pss.bdstatic.com/static/superman/img/logo/bd_logo1-66368c33f8.png")
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+	r.Password = "123456"
+	mysql.Driver().Raw("select id from template limit 10").Find(&r.Ids)
+	testErr(func() {
+
+	})
+	return
+}
+
 func testErr(f func()) {
 	f()
 }
@@ -83,7 +99,7 @@ func testErr(f func()) {
 //3、定义controller
 func DemoController(c *gin.Context) {
 	//web.Service[DemoParam, DemoResult](c, get)
-	web.DBService[DemoParam, []DemoResult](c, get2)
+	web.DBService[DemoParam, DemoResult](c, get3)
 }
 
 func TestWeb(t *testing.T) {
@@ -93,5 +109,7 @@ func TestWeb(t *testing.T) {
 		g.POST("/json", DemoController)
 		g.POST("/form", DemoController)
 	})
-	app.Start("config/app.yml")
+	app.Start(func(r *gin.Engine) {
+		//swagger.Init(r, docs.SwaggerInfo)
+	}, "config/app.yml")
 }

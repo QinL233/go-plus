@@ -10,13 +10,14 @@ import (
 	"github.com/QinL233/go-plus/oss/minio"
 	"github.com/QinL233/go-plus/web"
 	"github.com/QinL233/go-plus/yaml"
+	"github.com/gin-gonic/gin"
 )
 
 /**
 服务启动入口
 */
 
-func Start(conf ...string) {
+func Start(f func(r *gin.Engine), conf ...string) {
 	yaml.Init(conf...)
 	log.Init()
 	mysql.Init()
@@ -25,5 +26,5 @@ func Start(conf ...string) {
 	minio.Init()
 	rocket.Init()
 	cron.Init()
-	web.Init()
+	web.Init(f)
 }

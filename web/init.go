@@ -25,7 +25,7 @@ func init() {
 }
 
 // Init 对外提供初始化路由的方法
-func Init() {
+func Init(f func(r *gin.Engine)) {
 	//级别
 	gin.SetMode(yaml.Config.Web.Mode)
 	r := gin.Default()
@@ -49,6 +49,11 @@ func Init() {
 	router := r.Group(yaml.Config.Web.Prefix)
 	for _, controller := range controllers {
 		controller(router)
+	}
+
+	//自定义方法
+	if f != nil {
+		f(r)
 	}
 
 	//创建服务并启动
