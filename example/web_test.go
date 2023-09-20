@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/QinL233/go-plus"
 	"github.com/QinL233/go-plus/orm/mysql"
+	"github.com/QinL233/go-plus/orm/mysql/dao"
 
 	"github.com/QinL233/go-plus/web"
 	"github.com/gin-gonic/gin"
@@ -47,9 +48,14 @@ type DemoParam struct {
 }
 
 type DemoResult struct {
-	web.Response
-	Password string `json:"password"`
+	//web.Response
+	Username string `json:"username"`
 	Ids      []int  `json:"ids"`
+}
+
+type SysUser struct {
+	Id       int    `gorm:"primaryKey" json:"id"`
+	Username string `json:"username"`
 }
 
 func server(db *gorm.DB, param DemoParam) (r DemoResult) {
@@ -59,11 +65,13 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 		panic(err)
 	}
 	defer res.Body.Close()
-	r.Password = "123456"
 	if db == nil {
 		db = mysql.Driver()
 	}
-	db.Raw("select id from template limit 10").Find(&r.Ids)
+	//user := dao.TryOneKey[SysUser](db, param.Name)
+	user := dao.OneKey[SysUser](db, param.Name)
+	fmt.Println(user)
+	r.Username = user.Username
 	//匿名函数
 	testErr(func() {
 		if param.Name == "err" {
@@ -89,7 +97,6 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 		}()
 		if param.Name == "err2" {
 			fmt.Printf("500")
-			//【**注意】此时会退出程序
 			panic(errors.New("test2"))
 			fmt.Printf("600")
 		}
