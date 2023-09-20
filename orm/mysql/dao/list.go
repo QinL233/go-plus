@@ -21,6 +21,10 @@ func ListSortLimitTo[T any, E any](db *gorm.DB, sort string, limit int, conditio
 	return ListSortLimitFieldTo[T, E](db, nil, sort, limit, condition, args...)
 }
 
+func ListFieldTo[T any, E any](db *gorm.DB, field []string, condition interface{}, args ...interface{}) []E {
+	return ListSortLimitFieldTo[T, E](db, field, "", 0, condition, args...)
+}
+
 func ListSortLimitFieldTo[T any, E any](db *gorm.DB, field []string, sort string, limit int, condition interface{}, args ...interface{}) []E {
 	var result []E
 	var entity T
@@ -57,6 +61,10 @@ func ListEntitySortTo[T any, E any](db *gorm.DB, sort string, entity T) []E {
 
 func ListEntitySortLimitTo[T any, E any](db *gorm.DB, sort string, limit int, entity T) []E {
 	return ListEntitySortLimitFieldTo[T, E](db, nil, sort, limit, entity)
+}
+
+func ListEntityFieldTo[T any, E any](db *gorm.DB, field []string, entity T) []E {
+	return ListEntitySortLimitFieldTo[T, E](db, field, "", 0, entity)
 }
 
 func ListEntitySortLimitFieldTo[T any, E any](db *gorm.DB, field []string, sort string, limit int, entity T) []E {

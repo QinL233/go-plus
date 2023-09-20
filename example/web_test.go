@@ -59,6 +59,7 @@ type SysUser struct {
 }
 
 func server(db *gorm.DB, param DemoParam) (r DemoResult) {
+	//1、测试入参情况
 	fmt.Println(param)
 	res, err := http.Get("https://pss.bdstatic.com/static/superman/img/logo/bd_logo1-66368c33f8.png")
 	if err != nil {
@@ -68,17 +69,27 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 	if db == nil {
 		db = mysql.Driver()
 	}
+
+	//2、测试driver
 	user := dao.TryOne[SysUser](db, "id = ?", param.Name)
 	//user := dao.One[SysUser](db, "",param.Name)
-	dao.Create(db, &SysUser{Username: param.Name})
+	err = db.Transaction(func(tx *gorm.DB) error {
+		dao.Create(tx, &SysUser{Username: param.Name})
+		panic(errors.New("dao.Create error"))
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println(user)
 	r.Username = user.Username
-	//匿名函数
+
+	//3、测试异常
 	testErr(func() {
 		if param.Name == "err" {
 			fmt.Printf("100")
 			//【*注意】此时抛出异常会被主线程recover拦截到
-			panic(errors.New("test1"))
+			panic(errors.New("test"))
 			fmt.Printf("200")
 		}
 	})
@@ -87,7 +98,7 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 		if param.Name == "err1" {
 			fmt.Printf("300")
 			//【**注意】此时无法拦截，会退出程序
-			panic(errors.New("test2"))
+			panic(errors.New("test1"))
 			fmt.Printf("400")
 		}
 	})
@@ -102,6 +113,19 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 			//【**注意】此时会被子线程的defer拦截
 			panic(errors.New("test2"))
 			fmt.Printf("600")
+		}
+	})
+	testErr(func() {
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+		if param.Name == "err3" {
+			fmt.Printf("700")
+			//【*注意】此时抛出异常会被【子】线程recover拦截到，因此主线程没有拦截
+			panic(errors.New("test3"))
+			fmt.Printf("800")
 		}
 	})
 	return
