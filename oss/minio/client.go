@@ -27,14 +27,27 @@ func Upload(filename string, reader io.Reader) string {
 	return object
 }
 
-// Download 查询object的方式获取流
-func Download(c *gin.Context, object string, attachment bool) error {
+// Download 获取object io
+func Download(object string) io.Reader {
+	client := Driver()
+	bucket := yaml.Config.Oss.Minio.Bucket
+	file, err := client.GetObject(bucket, object, minio.GetObjectOptions{})
+	defer file.Close()
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return file
+}
+
+// DownloadGin 查询object的方式获取流
+func DownloadGin(c *gin.Context, object string, attachment bool) {
 	client := Driver()
 	bucket := yaml.Config.Oss.Minio.Bucket
 
 	info, err := client.StatObject(bucket, object, minio.StatObjectOptions{})
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	//设置文件的类型
 	contentType := "application/octet-stream"
@@ -68,12 +81,12 @@ func Download(c *gin.Context, object string, attachment bool) error {
 		var start, end int64
 		if strings.HasSuffix(rangeHeader, "-") {
 			if _, err = fmt.Sscanf(rangeHeader, "bytes=%d-", &start); err != nil {
-				return err
+				log.Println(err)
 			}
 			end = info.Size - 1
 		} else if strings.Contains(rangeHeader, "-") {
 			if _, err = fmt.Sscanf(rangeHeader, "bytes=%d-%d", &start, &end); err != nil {
-				return err
+				log.Println(err)
 			}
 		}
 		//告诉浏览器当前块数据的实际偏移量
@@ -84,11 +97,10 @@ func Download(c *gin.Context, object string, attachment bool) error {
 	file, err := client.GetObject(bucket, object, options)
 	defer file.Close()
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	//忽视通讯IO时的异常
 	io.CopyBuffer(c.Writer, file, make([]byte, 1024))
-	return nil
 }
 
 func uuid() string {

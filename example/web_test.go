@@ -5,6 +5,7 @@ import (
 	"github.com/QinL233/go-plus"
 	"github.com/QinL233/go-plus/orm/mysql"
 	"github.com/QinL233/go-plus/orm/mysql/dao"
+	"github.com/QinL233/go-plus/oss/minio"
 	"github.com/QinL233/go-plus/web"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -131,6 +132,10 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 	return
 }
 
+func download(c *gin.Context) {
+	minio.DownloadGin(c, "2023/09/20/31e495f9-ecf2-4961-9fb5-788fc9bc95a5/2022航天领航者计划招商宣讲.mp4", false)
+}
+
 //回调函数
 func testErr(f func()) {
 	f()
@@ -143,12 +148,9 @@ func TestWeb(t *testing.T) {
 	web.POST[DemoParam, DemoResult]("/json", server)
 	web.PUT[DemoParam, DemoResult]("/form", server)
 	//2、使用table自定义router
-	//web.Controller(func(g *gin.RouterGroup) {
-	//	g.GET("/query", DemoController)
-	//	g.GET("/path/:name", DemoController)
-	//	g.POST("/json", DemoController)
-	//	g.POST("/form", DemoController)
-	//})
+	web.Controller(func(g *gin.RouterGroup) {
+		g.GET("/download", download)
+	})
 	app.Start(func(r *gin.Engine) {
 		//swagger.Init(r, docs.SwaggerInfo)
 	}, "config/app.yml")
