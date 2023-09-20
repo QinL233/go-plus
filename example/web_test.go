@@ -5,7 +5,6 @@ import (
 	"github.com/QinL233/go-plus"
 	"github.com/QinL233/go-plus/orm/mysql"
 	"github.com/QinL233/go-plus/orm/mysql/dao"
-
 	"github.com/QinL233/go-plus/web"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -68,14 +67,15 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 	if db == nil {
 		db = mysql.Driver()
 	}
-	//user := dao.TryOneKey[SysUser](db, param.Name)
-	user := dao.OneKey[SysUser](db, param.Name)
+	user := dao.TryOne[SysUser](db, "id = ?", param.Name)
+	//user := dao.One[SysUser](db, "",param.Name)
 	fmt.Println(user)
 	r.Username = user.Username
 	//匿名函数
 	testErr(func() {
 		if param.Name == "err" {
 			fmt.Printf("100")
+			//【*注意】此时抛出异常会被主线程recover拦截到
 			panic(errors.New("test1"))
 			fmt.Printf("200")
 		}
@@ -84,7 +84,7 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 	go testErr(func() {
 		if param.Name == "err1" {
 			fmt.Printf("300")
-			//【**注意】此时会退出程序
+			//【**注意】此时无法拦截，会退出程序
 			panic(errors.New("test2"))
 			fmt.Printf("400")
 		}
@@ -97,6 +97,7 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 		}()
 		if param.Name == "err2" {
 			fmt.Printf("500")
+			//【**注意】此时会被子线程的defer拦截
 			panic(errors.New("test2"))
 			fmt.Printf("600")
 		}
