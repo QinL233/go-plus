@@ -28,6 +28,7 @@ Service 负责做业务处理
 4、函数的实现保证参数校验、原子性、健壮性【规范】
 5、在抽象类中定义全局以保证多个service传递中实现事务、全局变量的传递性【db传递】
 6、统一使用 panic 处理异常，可以减少if err 处理【*争议!】
+7、子协程异常处理需自己捕获
 
 Dao db-driver处理
 1、处理单表的基础增删改查【crud-可封装】
@@ -71,12 +72,26 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 			fmt.Printf("200")
 		}
 	})
-	//子协程匿名函数
+	//子协程匿名函数-注意此时需要手动捕获异常
 	go testErr(func() {
 		if param.Name == "err1" {
 			fmt.Printf("300")
+			//【**注意】此时会退出程序
 			panic(errors.New("test2"))
 			fmt.Printf("400")
+		}
+	})
+	go testErr(func() {
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+		if param.Name == "err2" {
+			fmt.Printf("500")
+			//【**注意】此时会退出程序
+			panic(errors.New("test2"))
+			fmt.Printf("600")
 		}
 	})
 	return
