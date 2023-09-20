@@ -3,8 +3,8 @@ package example
 import (
 	"fmt"
 	"github.com/QinL233/go-plus"
-	//"github.com/QinL233/go-plus/docs"
 	"github.com/QinL233/go-plus/orm/mysql"
+
 	"github.com/QinL233/go-plus/web"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -23,10 +23,11 @@ Controller 负责请求出入口处理
 
 Service 负责做业务处理
 1、有且仅有一个service接口，一个文件夹是一个实现，一个.go实现一个方法【便于管理】
-2、参数从方法参数传递，输出使用指针：func(...*param) (*result,err)【统一】
+2、参数从方法参数传递，输出使用指针：func(db,param) (result)【统一】
 3、service.go中定义的param和result尽量不要循环引用
 4、函数的实现保证参数校验、原子性、健壮性【规范】
 5、在抽象类中定义全局以保证多个service传递中实现事务、全局变量的传递性【db传递】
+6、统一使用 panic 处理异常，可以减少if err 处理【*争议!】
 
 Dao db-driver处理
 1、处理单表的基础增删改查【crud-可封装】
@@ -50,35 +51,49 @@ type DemoResult struct {
 	Ids      []int  `json:"ids"`
 }
 
-func server(db *gorm.DB, param DemoParam) (r DemoResult, err error) {
+func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 	fmt.Println(param)
 	res, err := http.Get("https://pss.bdstatic.com/static/superman/img/logo/bd_logo1-66368c33f8.png")
 	if err != nil {
-		//panic(err)
-		return r, err
+		panic(err)
 	}
 	defer res.Body.Close()
 	r.Password = "123456"
-	mysql.Driver().Raw("select id from template limit 10").Find(&r.Ids)
+	if db == nil {
+		db = mysql.Driver()
+	}
+	db.Raw("select id from template limit 10").Find(&r.Ids)
+	//匿名函数
 	testErr(func() {
-		if true {
+		if param.Name == "err" {
 			fmt.Printf("100")
-			err = errors.New("test")
+			panic(errors.New("test1"))
 			fmt.Printf("200")
+		}
+	})
+	//子协程匿名函数
+	go testErr(func() {
+		if param.Name == "err1" {
+			fmt.Printf("300")
+			panic(errors.New("test2"))
+			fmt.Printf("400")
 		}
 	})
 	return
 }
 
+//回调函数
 func testErr(f func()) {
 	f()
 }
 
 func TestWeb(t *testing.T) {
+	//1、使用包装快速定义router
 	web.GET[DemoParam, DemoResult]("/query", server)
 	web.DELETE[DemoParam, DemoResult]("/path/:name", server)
 	web.POST[DemoParam, DemoResult]("/json", server)
 	web.PUT[DemoParam, DemoResult]("/form", server)
+	//2、使用table自定义router
 	//web.Controller(func(g *gin.RouterGroup) {
 	//	g.GET("/query", DemoController)
 	//	g.GET("/path/:name", DemoController)

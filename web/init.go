@@ -28,17 +28,13 @@ func init() {
 func Init(f func(r *gin.Engine)) {
 	//级别
 	gin.SetMode(yaml.Config.Web.Mode)
-	r := gin.Default()
-
-	//全局异常处理
-	r.Use(func(c *gin.Context) {
-		defer func() {
-			if err := recover(); err != nil {
-				Fail(c, 500, err.(error))
-			}
-		}()
-		c.Next()
-	})
+	r := gin.New()
+	//默认日志
+	r.Use(gin.Logger())
+	//gin默认异常处理
+	//r.Use(gin.Recovery())
+	//自定义全局异常处理
+	r.Use(recovery())
 
 	//自定义拦截器
 	for _, interceptor := range interceptors {

@@ -25,42 +25,48 @@ func Controller(list ...func(g *gin.RouterGroup)) {
 }
 
 /**
-快速构建controller的方法，用于快速的定义入参、响应、server函数
+快速构建controller的方法
+1、快速定义api、type、入参、响应、处理函数
+2、封装gin.context不进行传递使用
+3、封装controller提取和校验入参(param)
+4、封装driver的生成
+5、规范化标准的server：传递driver便于事务、panic err以统一异常捕获
 */
 
-func GET[P any, R any](uri string, f func(db *gorm.DB, p P) (r R, err error)) {
+func GET[P any, R any](uri string, server func(db *gorm.DB, param P) R) {
 	Controller(func(g *gin.RouterGroup) {
 		g.GET(uri, func(context *gin.Context) {
-			Server[P, R](context, f)
+			Server[P, R](context, server)
 		})
 	})
 }
 
-func POST[P any, R any](uri string, f func(db *gorm.DB, p P) (r R, err error)) {
+func POST[P any, R any](uri string, server func(db *gorm.DB, param P) R) {
 	Controller(func(g *gin.RouterGroup) {
 		g.POST(uri, func(context *gin.Context) {
-			Server[P, R](context, f)
+			Server[P, R](context, server)
 		})
 	})
 }
 
-func PUT[P any, R any](uri string, f func(db *gorm.DB, p P) (r R, err error)) {
+func PUT[P any, R any](uri string, server func(db *gorm.DB, param P) R) {
 	Controller(func(g *gin.RouterGroup) {
 		g.PUT(uri, func(context *gin.Context) {
-			Server[P, R](context, f)
+			Server[P, R](context, server)
 		})
 	})
 }
 
-func DELETE[P any, R any](uri string, f func(db *gorm.DB, p P) (r R, err error)) {
+func DELETE[P any, R any](uri string, server func(db *gorm.DB, param P) R) {
 	Controller(func(g *gin.RouterGroup) {
 		g.DELETE(uri, func(context *gin.Context) {
-			Server[P, R](context, f)
+			Server[P, R](context, server)
 		})
 	})
 }
 
-func Server[P any, R any](c *gin.Context, f func(db *gorm.DB, param P) (R, error)) {
+// Server controller前后文处理（隐藏context，生成driver、规范化server函数）
+func Server[P any, R any](c *gin.Context, f func(db *gorm.DB, param P) R) {
 	var param P
 	//1、尝试从header中取得参数【不保证校验】 - 获取`header:"paramName"`
 	err := c.ShouldBindHeader(&param)
@@ -69,29 +75,19 @@ func Server[P any, R any](c *gin.Context, f func(db *gorm.DB, param P) (R, error
 	}
 	//2、根据参数性质bind参数
 	if c.Params != nil && len(c.Params) > 0 {
-		//uri请求 - 必须注意service使用`uri:"paramName"`接收
+		//uri请求 - 必须注意param struct使用`uri:"paramName"`标签接收解析
 		if err = c.ShouldBindUri(&param); err != nil {
 			Fail(c, 500, errors.New("param is fail"))
 			return
 		}
 	} else {
-		//query/json/form请求
+		//query/json/form请求 - 必须注意param struct使用`form:"paramName"`标签接收解析
 		if err = c.ShouldBind(&param); err != nil {
 			Fail(c, 500, errors.New("param is fail"))
 			return
 		}
 	}
-	if err != nil {
-		log.Println(err)
-		Fail(c, 500, err)
-		return
-	}
-	//3.回调方法
-	r, err := f(mysql.Driver(), param)
-	if err != nil {
-		Fail(c, 500, err)
-		return
-	}
-	//4.构建返回
-	Success(c, r)
+	//3.回调server方法并返回封装
+	Success(c, f(mysql.Driver(), param))
+
 }

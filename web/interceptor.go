@@ -1,6 +1,8 @@
 package web
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 /**
 拦截器表
@@ -14,5 +16,20 @@ func Interceptor(handlers ...func(g *gin.Context)) {
 	}
 	for _, handler := range handlers {
 		interceptors = append(interceptors, handler)
+	}
+}
+
+//自定义异常拦截器
+func recovery() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				Fail(c, 500, err.(error))
+			}
+		}()
+		c.Next()
+		if len(c.Errors) > 0 {
+			Fail(c, 500, c.Errors[0].Err)
+		}
 	}
 }
