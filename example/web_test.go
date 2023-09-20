@@ -42,6 +42,7 @@ Model 负责定义数据结构
 //1、定义param和result的class
 type DemoParam struct {
 	Name  string                `form:"name" binding:"required"`
+	Ids   []int                 `form:"ids" binding:"required"`
 	File  *multipart.FileHeader `form:"file"`
 	Token string                `header:"token" binding:"required"`
 }
@@ -69,6 +70,7 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 	}
 	user := dao.TryOne[SysUser](db, "id = ?", param.Name)
 	//user := dao.One[SysUser](db, "",param.Name)
+	dao.Create(db, &SysUser{Username: param.Name})
 	fmt.Println(user)
 	r.Username = user.Username
 	//匿名函数

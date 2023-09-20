@@ -3,7 +3,7 @@ package dao
 import "gorm.io/gorm"
 
 func Create(db *gorm.DB, entity any) int64 {
-	r := db.Create(&entity)
+	r := db.Create(entity)
 	if r.Error != nil {
 		panic(r.Error)
 	}
@@ -11,7 +11,7 @@ func Create(db *gorm.DB, entity any) int64 {
 }
 
 func CreateBatch(db *gorm.DB, entity any, size int) int64 {
-	r := db.CreateInBatches(&entity, size)
+	r := db.CreateInBatches(entity, size)
 	if r.Error != nil {
 		panic(r.Error)
 	}
