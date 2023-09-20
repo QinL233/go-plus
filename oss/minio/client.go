@@ -3,10 +3,15 @@ package minio
 import (
 	"fmt"
 	"github.com/QinL233/go-plus/yaml"
+	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go"
 	"io"
 	"log"
 	"math/rand"
+	"mime"
+	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,6 +25,70 @@ func Upload(filename string, reader io.Reader) string {
 		return ""
 	}
 	return object
+}
+
+// Download 查询object的方式获取流
+func Download(c *gin.Context, object string, attachment bool) error {
+	client := Driver()
+	bucket := yaml.Config.Oss.Minio.Bucket
+
+	info, err := client.StatObject(bucket, object, minio.StatObjectOptions{})
+	if err != nil {
+		return err
+	}
+	//设置文件的类型
+	contentType := "application/octet-stream"
+	filename := "file"
+	if i := strings.LastIndex(object, "/"); i > 0 {
+		filename = object[i+1:]
+		if j := strings.LastIndex(filename, "."); j > 0 {
+			if ext := filename[j:]; ext != "" {
+				contentType = mime.TypeByExtension(ext)
+			}
+		}
+	}
+	c.Header("Content-Type", contentType)
+
+	//是否强制让弹出下载窗口浏览器下载
+	if attachment {
+		c.Header("Content-Disposition", "attachment; filename="+filename)
+	}
+
+	//设置文章的长度
+	c.Header("Content-Length", strconv.FormatInt(info.Size, 10))
+
+	//告诉浏览器分块返回
+	c.Header("Accept-Ranges", "bytes")
+	//使用range判断请求是否分段
+	options := minio.GetObjectOptions{}
+	rangeHeader := c.GetHeader("Range")
+	if rangeHeader != "" {
+		c.Status(http.StatusPartialContent)
+		//获取偏移量
+		var start, end int64
+		if strings.HasSuffix(rangeHeader, "-") {
+			if _, err = fmt.Sscanf(rangeHeader, "bytes=%d-", &start); err != nil {
+				return err
+			}
+			end = info.Size - 1
+		} else if strings.Contains(rangeHeader, "-") {
+			if _, err = fmt.Sscanf(rangeHeader, "bytes=%d-%d", &start, &end); err != nil {
+				return err
+			}
+		}
+		//告诉浏览器当前块数据的实际偏移量
+		c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, info.Size))
+		//分块获取minio数据
+		options.SetRange(start, end)
+	}
+	file, err := client.GetObject(bucket, object, options)
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+	//忽视通讯IO时的异常
+	io.CopyBuffer(c.Writer, file, make([]byte, 1024))
+	return nil
 }
 
 func uuid() string {
