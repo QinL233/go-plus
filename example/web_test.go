@@ -50,44 +50,22 @@ type DemoResult struct {
 	Ids      []int  `json:"ids"`
 }
 
-//2、定义service接口并实现
-func get(param DemoParam) (DemoResult, error) {
-	fmt.Printf("%v", param)
-	r := DemoResult{
-		Password: "123456",
-	}
-	mysql.Driver().Raw("select id from template limit 10").Find(&r.Ids)
-	return r, nil
-}
-
-func get2(db *gorm.DB, param DemoParam) (result []DemoResult, err error) {
-	fmt.Printf("%v", param)
-	r := DemoResult{}
-	r.Password = "123456"
-	if err = db.Raw("select ids from template limit 10").Find(&r.Ids).Error; err != nil {
-		panic(err)
-	}
-	testErr(func() {
-		if true {
-			fmt.Printf("100")
-			err = errors.New("test")
-			panic(err)
-			fmt.Printf("200")
-		}
-	})
-	return
-}
-
-func get3(db *gorm.DB, param DemoParam) (r DemoResult, err error) {
+func server(db *gorm.DB, param DemoParam) (r DemoResult, err error) {
+	fmt.Println(param)
 	res, err := http.Get("https://pss.bdstatic.com/static/superman/img/logo/bd_logo1-66368c33f8.png")
 	if err != nil {
-		panic(err)
+		//panic(err)
+		return r, err
 	}
 	defer res.Body.Close()
 	r.Password = "123456"
 	mysql.Driver().Raw("select id from template limit 10").Find(&r.Ids)
 	testErr(func() {
-
+		if true {
+			fmt.Printf("100")
+			err = errors.New("test")
+			fmt.Printf("200")
+		}
 	})
 	return
 }
@@ -96,19 +74,17 @@ func testErr(f func()) {
 	f()
 }
 
-//3、定义controller
-func DemoController(c *gin.Context) {
-	//web.Service[DemoParam, DemoResult](c, get)
-	web.DBService[DemoParam, DemoResult](c, get3)
-}
-
 func TestWeb(t *testing.T) {
-	web.Controller(func(g *gin.RouterGroup) {
-		g.GET("/query", DemoController)
-		g.GET("/path/:name", DemoController)
-		g.POST("/json", DemoController)
-		g.POST("/form", DemoController)
-	})
+	web.GET[DemoParam, DemoResult]("/query", server)
+	web.DELETE[DemoParam, DemoResult]("/path/:name", server)
+	web.POST[DemoParam, DemoResult]("/json", server)
+	web.PUT[DemoParam, DemoResult]("/form", server)
+	//web.Controller(func(g *gin.RouterGroup) {
+	//	g.GET("/query", DemoController)
+	//	g.GET("/path/:name", DemoController)
+	//	g.POST("/json", DemoController)
+	//	g.POST("/form", DemoController)
+	//})
 	app.Start(func(r *gin.Engine) {
 		//swagger.Init(r, docs.SwaggerInfo)
 	}, "config/app.yml")
