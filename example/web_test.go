@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"testing"
@@ -133,7 +134,15 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 }
 
 func download(c *gin.Context) {
-	minio.DownloadGin(c, "2023/09/20/31e495f9-ecf2-4961-9fb5-788fc9bc95a5/2022航天领航者计划招商宣讲.mp4", false)
+	object := "2023/09/20/31e495f9-ecf2-4961-9fb5-788fc9bc95a5/2022航天领航者计划招商宣讲.mp4"
+	//minio.DownloadGin(c, object, false)
+	f := minio.Download(object)
+	defer f.Close()
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+	c.JSONP(200, len(b))
 }
 
 //回调函数

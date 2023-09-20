@@ -28,11 +28,10 @@ func Upload(filename string, reader io.Reader) string {
 }
 
 // Download 获取object io
-func Download(object string) io.Reader {
+func Download(object string) io.ReadCloser {
 	client := Driver()
 	bucket := yaml.Config.Oss.Minio.Bucket
 	file, err := client.GetObject(bucket, object, minio.GetObjectOptions{})
-	defer file.Close()
 	if err != nil {
 		log.Println(err)
 		return nil
