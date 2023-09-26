@@ -3,6 +3,7 @@ package mysql
 import (
 	"fmt"
 	"github.com/QinL233/go-plus/yaml"
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -18,6 +19,10 @@ func Init() {
 		log.Println("mysql config is empty !")
 		return
 	}
+	logMode := logger.Warn
+	if yaml.Config.Web.Mode != gin.ReleaseMode {
+		logMode = logger.Info
+	}
 	var err error
 	//createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&useAffectedRows=true
 	driver, err = gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
@@ -27,7 +32,7 @@ func Init() {
 		config.Port,
 		config.Database)),
 		&gorm.Config{
-			Logger: logger.Default.LogMode(logger.Info), //日志级别
+			Logger: logger.Default.LogMode(logMode), //日志级别
 			NamingStrategy: schema.NamingStrategy{
 				SingularTable: true, //取消表明被加s
 			},

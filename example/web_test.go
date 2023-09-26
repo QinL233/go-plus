@@ -3,16 +3,16 @@ package example
 import (
 	"fmt"
 	"github.com/QinL233/go-plus"
-	"github.com/QinL233/go-plus/orm/mysql"
-	"github.com/QinL233/go-plus/orm/mysql/dao"
 	"github.com/QinL233/go-plus/oss/minio"
 	"github.com/QinL233/go-plus/web"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"sync"
 	"testing"
 )
 
@@ -68,25 +68,42 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 		panic(err)
 	}
 	defer res.Body.Close()
-	if db == nil {
-		db = mysql.Driver()
-	}
+	go e(res.Body)
 
-	//2、测试driver
-	user := dao.TryOne[SysUser](db, "id = ?", param.Name)
-	//user := dao.One[SysUser](db, "",param.Name)
-	err = db.Transaction(func(tx *gorm.DB) error {
-		dao.Create(tx, &SysUser{Username: param.Name})
-		panic(errors.New("dao.Create error"))
-		return nil
-	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(user)
-	r.Username = user.Username
+	//2、测试driverif
+	//db == nil {
+	//		db = mysql.Driver()
+	//	}
+	//user := dao.TryOne[SysUser](db, "id = ?", param.Name)
+	////user := dao.One[SysUser](db, "",param.Name)
+	//err = db.Transaction(func(tx *gorm.DB) error {
+	//	dao.Create(tx, &SysUser{Username: param.Name})
+	//	panic(errors.New("dao.Create error"))
+	//	return nil
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println(user)
+	//r.Username = user.Username
 
 	//3、测试异常
+	var dw sync.WaitGroup
+	dw.Add(50)
+	for i := 0; i < 50; i++ {
+		go func() {
+			defer func() {
+				if err := recover(); err != nil {
+					fmt.Println(err)
+				}
+				dw.Done()
+			}()
+			if i%2 == 0 {
+				panic(fmt.Errorf("test panic %d", i))
+			}
+		}()
+	}
+	dw.Wait()
 	testErr(func() {
 		if param.Name == "err" {
 			fmt.Printf("100")
@@ -131,6 +148,12 @@ func server(db *gorm.DB, param DemoParam) (r DemoResult) {
 		}
 	})
 	return
+}
+
+func e(src io.ReadCloser) {
+	defer src.Close()
+	b, _ := ioutil.ReadAll(src)
+	fmt.Println(len(b))
 }
 
 func download(c *gin.Context) {
