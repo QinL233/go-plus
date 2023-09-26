@@ -26,7 +26,11 @@ func initLogstash() {
 		return
 	}
 	driver = logrus.New()
-	driver.SetLevel(logrus.DebugLevel)
+	logMode := logrus.InfoLevel
+	if yaml.Config.Web.Mode != gin.ReleaseMode {
+		logMode = logrus.DebugLevel
+	}
+	driver.SetLevel(logMode)
 	conn, err := net.Dial("tcp", config.Url)
 	if err != nil {
 		driver.Fatal(err)
