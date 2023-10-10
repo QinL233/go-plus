@@ -17,7 +17,10 @@ import (
 
 // Upload 上传[]byte
 func Upload(filename string, reader io.Reader) string {
-	bucket := yaml.Config.Oss.Minio.Bucket
+	return UploadBucket(yaml.Config.Oss.Minio.Bucket, filename, reader)
+}
+
+func UploadBucket(bucket, filename string, reader io.Reader) string {
 	object := fmt.Sprintf("%s/%s/%s", time.Now().Format("2006/01/02"), uuid(), filename)
 	_, err := Driver().PutObject(bucket, object, reader, -1, minio.PutObjectOptions{})
 	if err != nil {
@@ -29,8 +32,11 @@ func Upload(filename string, reader io.Reader) string {
 
 // Download 获取object io
 func Download(object string) io.ReadCloser {
+	return DownloadBucket(yaml.Config.Oss.Minio.Bucket, object)
+}
+
+func DownloadBucket(bucket, object string) io.ReadCloser {
 	client := Driver()
-	bucket := yaml.Config.Oss.Minio.Bucket
 	file, err := client.GetObject(bucket, object, minio.GetObjectOptions{})
 	if err != nil {
 		log.Println(err)
@@ -41,8 +47,11 @@ func Download(object string) io.ReadCloser {
 
 // DownloadGin 查询object的方式获取流
 func DownloadGin(c *gin.Context, object string, attachment bool) {
+	DownloadGinBucket(c, yaml.Config.Oss.Minio.Bucket, object, attachment)
+}
+
+func DownloadGinBucket(c *gin.Context, bucket, object string, attachment bool) {
 	client := Driver()
-	bucket := yaml.Config.Oss.Minio.Bucket
 
 	info, err := client.StatObject(bucket, object, minio.StatObjectOptions{})
 	if err != nil {
