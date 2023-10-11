@@ -17,14 +17,17 @@ type Response struct {
 
 func Success(c *gin.Context, data any) {
 	if hadWriter(c) {
+		c.Abort()
 		return
 	}
 	c.JSON(200, parserResponse(data))
+	c.Abort()
 	return
 }
 
 func Fail(c *gin.Context, code int, err error) {
 	if hadWriter(c) {
+		c.Abort()
 		return
 	}
 	c.JSON(200, Response{
@@ -32,6 +35,7 @@ func Fail(c *gin.Context, code int, err error) {
 		Msg:  err.Error(),
 		Data: nil,
 	})
+	c.Abort()
 	return
 }
 
