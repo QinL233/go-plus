@@ -12,16 +12,23 @@ type Client struct {
 func (p *Client) Set(key string, value interface{}, second int) error {
 	c := driver.Get()
 	defer c.Close()
-
-	bytes, err := json.Marshal(value)
-	if err != nil {
-		return err
+	switch value.(type) {
+	case string:
+		_, err := c.Do("SET", p.Prefix+key, value)
+		if err != nil {
+			return err
+		}
+	default:
+		bytes, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
+		_, err = c.Do("SET", p.Prefix+key, bytes)
+		if err != nil {
+			return err
+		}
 	}
-	_, err = c.Do("SET", p.Prefix+key, bytes)
-	if err != nil {
-		return err
-	}
-	_, err = c.Do("EXPIRE", p.Prefix+key, second)
+	_, err := c.Do("EXPIRE", p.Prefix+key, second)
 	if err != nil {
 		return err
 	}
