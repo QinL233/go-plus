@@ -15,14 +15,19 @@ import (
 	"time"
 )
 
-// Upload 上传[]byte
+// Upload 上传文件流
 func Upload(filename string, reader io.Reader) string {
-	return UploadBucket(yaml.Config.Oss.Minio.Bucket, filename, reader)
+	return UploadBucket(yaml.Config.Oss.Minio.Bucket, filename, reader, -1)
 }
 
-func UploadBucket(bucket, filename string, reader io.Reader) string {
+// UploadBoundary 上传一个有读取边界的流
+func UploadBoundary(filename string, reader io.Reader, size int64) string {
+	return UploadBucket(yaml.Config.Oss.Minio.Bucket, filename, reader, size)
+}
+
+func UploadBucket(bucket, filename string, reader io.Reader, size int64) string {
 	object := fmt.Sprintf("%s/%s/%s", time.Now().Format("2006/01/02"), uuid(), filename)
-	_, err := Driver().PutObject(bucket, object, reader, -1, minio.PutObjectOptions{})
+	_, err := Driver().PutObject(bucket, object, reader, size, minio.PutObjectOptions{})
 	if err != nil {
 		log.Println(err)
 		return ""
