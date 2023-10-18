@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"log"
 )
 
 /**
@@ -68,21 +67,18 @@ func DELETE[P any, R any](uri string, server func(db *gorm.DB, param P) R) {
 // Server controller前后文处理（隐藏context，生成driver、规范化server函数）
 func Server[P any, R any](c *gin.Context, f func(db *gorm.DB, param P) R) {
 	var param P
-	//1、尝试从header中取得参数【不保证校验】 - 获取`header:"paramName"`
-	err := c.ShouldBindHeader(&param)
-	if err != nil {
-		log.Println(err)
-	}
+	//1、【尝试】从header中取得参数【不保证校验】 - 获取`header:"paramName"`
+	c.ShouldBindHeader(&param)
 	//2、根据参数性质bind参数
 	if c.Params != nil && len(c.Params) > 0 {
 		//uri请求 - 必须注意param struct使用`uri:"paramName"`标签接收解析
-		if err = c.ShouldBindUri(&param); err != nil {
+		if err := c.ShouldBindUri(&param); err != nil {
 			Fail(c, 500, errors.New("param is fail"))
 			return
 		}
 	} else {
 		//query/json/form请求 - 必须注意param struct使用`form:"paramName"`标签接收解析
-		if err = c.ShouldBind(&param); err != nil {
+		if err := c.ShouldBind(&param); err != nil {
 			Fail(c, 500, errors.New("param is fail"))
 			return
 		}
