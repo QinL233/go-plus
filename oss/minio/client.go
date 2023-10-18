@@ -1,11 +1,13 @@
 package minio
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/QinL233/go-plus/yaml"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go"
 	"io"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"mime"
@@ -20,13 +22,84 @@ func Upload(filename string, reader io.Reader) string {
 	return UploadBucket(yaml.Config.Oss.Minio.Bucket, filename, reader, -1)
 }
 
-// UploadBoundary 上传一个有读取边界的流
-func UploadBoundary(filename string, reader io.Reader, size int64) string {
-	return UploadBucket(yaml.Config.Oss.Minio.Bucket, filename, reader, size)
+// UploadGin 使用预签名put转发到minio
+func UploadGin(c *gin.Context) string {
+	//报文内容
+	/*
+		----------------------------626289440185114288335838
+		Content-Disposition: form-data; name="file"; filename="1.txt"
+		Content-Type: text/plain
+
+		...文件真实内容
+
+		----------------------------626289440185114288335838--
+
+	*/
+	r := bufio.NewReader(c.Request.Body)
+	i := 0
+	fileHeaderSize := 0
+	LastBoundarySize := 0
+	//读取前4行内容
+	var filename string
+	for i < 4 {
+		i++
+		content, _, err := r.ReadLine()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+		//每行都需要+分行符号(2byte)
+		fileHeaderSize += len(content) + 2
+		//第一行为文件信息分隔符(末尾也存在一行分隔符信息，因此需要减去该行)
+		if i == 1 {
+			//第一行为分隔符
+			//结尾为(分行符号+(空行)分行符号+分隔符+(空行)分行符号)
+			LastBoundarySize += 4 + len(content) + 2
+			continue
+		} else if i == 2 {
+			//第二行有文件名信息
+			f := string(content)
+			filename = f[strings.LastIndex(f, `filename="`)+10 : len(f)-1]
+		}
+	}
+	if filename == "" {
+		panic("无法解析到文件头部信息")
+	}
+	fileLength := c.Request.ContentLength - int64(fileHeaderSize+LastBoundarySize)
+	//最后的文件流等于报文减去头部后，再减去尾部的内容
+
+	object := toObject(filename)
+	server, err := Driver().PresignedPutObject(yaml.Config.Oss.Minio.Bucket, object, 10*time.Minute)
+	if err != nil {
+		panic(err)
+	}
+	req, err := http.NewRequest("PUT", server.String(), io.LimitReader(c.Request.Body, fileLength))
+	if err != nil {
+		panic(err)
+	}
+	//req.Header.Set("Content-Type", c.GetHeader("Content-Type"))
+	req.ContentLength = fileLength
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		s, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			panic(err)
+		}
+		return string(s)
+	}
+	return object
 }
 
+// UploadBucket 上传文件到指定bucket
 func UploadBucket(bucket, filename string, reader io.Reader, size int64) string {
-	object := fmt.Sprintf("%s/%s/%s", time.Now().Format("2006/01/02"), uuid(), filename)
+	object := toObject(filename)
 	_, err := Driver().PutObject(bucket, object, reader, size, minio.PutObjectOptions{})
 	if err != nil {
 		log.Println(err)
@@ -114,6 +187,10 @@ func DownloadGinBucket(c *gin.Context, bucket, object string, attachment bool) {
 	}
 	//忽视通讯IO时的异常
 	io.CopyBuffer(c.Writer, file, make([]byte, 1024))
+}
+
+func toObject(filename string) string {
+	return fmt.Sprintf("%s/%s/%s", time.Now().Format("2006/01/02"), uuid(), filename)
 }
 
 func uuid() string {
