@@ -60,7 +60,11 @@ func UploadGin(c *gin.Context) string {
 			continue
 		} else if i == 2 {
 			//第二行有文件名信息
-			_, dispositionParams, err := mime.ParseMediaType(string(content))
+			contentDisposition := string(content)
+			if strings.HasPrefix(contentDisposition, "Content-Disposition: ") {
+				contentDisposition = contentDisposition[21:]
+			}
+			_, dispositionParams, err := mime.ParseMediaType(contentDisposition)
 			if err != nil {
 				panic(err)
 			}
