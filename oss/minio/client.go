@@ -60,8 +60,11 @@ func UploadGin(c *gin.Context) string {
 			continue
 		} else if i == 2 {
 			//第二行有文件名信息
-			f := string(content)
-			filename = f[strings.LastIndex(f, `filename="`)+10 : len(f)-1]
+			_, dispositionParams, err := mime.ParseMediaType(string(content))
+			if err != nil {
+				panic(err)
+			}
+			filename = dispositionParams["filename"]
 		}
 	}
 	if filename == "" {
