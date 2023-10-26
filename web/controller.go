@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"github.com/QinL233/go-plus/orm/mysql"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -73,12 +74,14 @@ func Server[P any, R any](c *gin.Context, f func(db *gorm.DB, param P) R) {
 	if c.Params != nil && len(c.Params) > 0 {
 		//uri请求 - 必须注意param struct使用`uri:"paramName"`标签接收解析
 		if err := c.ShouldBindUri(&param); err != nil {
+			fmt.Println(err)
 			Fail(c, 500, errors.New("param is fail"))
 			return
 		}
 	} else {
 		//query/json/form请求 - 必须注意param struct使用`form:"paramName"`标签接收解析
 		if err := c.ShouldBind(&param); err != nil {
+			fmt.Println(err)
 			Fail(c, 500, errors.New("param is fail"))
 			return
 		}
