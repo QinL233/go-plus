@@ -1,7 +1,9 @@
 package web
 
 import (
+	"github.com/QinL233/go-plus/log"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 /**
@@ -24,6 +26,15 @@ func recovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
+				if log.Driver() != nil {
+					log.Driver().WithFields(logrus.Fields{
+						"client": c.ClientIP(),
+						"code":   c.Writer.Status(),
+						"header": c.Request.Header,
+						"method": c.Request.Method,
+						"url":    c.Request.URL.Path,
+					}).Errorf("panic: %v", err)
+				}
 				Fail(c, 500, err.(error))
 			}
 		}()

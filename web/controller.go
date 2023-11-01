@@ -2,9 +2,11 @@ package web
 
 import (
 	"fmt"
+	"github.com/QinL233/go-plus/log"
 	"github.com/QinL233/go-plus/orm/mysql"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -87,6 +89,20 @@ func Server[P any, R any](c *gin.Context, f func(db *gorm.DB, param P) R) {
 		}
 	}
 	//3.回调server方法并返回封装
-	Success(c, f(mysql.Driver(), param))
-
+	if log.Driver() != nil {
+		//将输入输出打印到日志中
+		r := f(mysql.Driver(), param)
+		log.Driver().WithFields(logrus.Fields{
+			"client": c.ClientIP(),
+			"code":   c.Writer.Status(),
+			"header": c.Request.Header,
+			"method": c.Request.Method,
+			"url":    c.Request.URL.Path,
+			"param":  param,
+			"result": r,
+		}).Info()
+		Success(c, r)
+	} else {
+		Success(c, f(mysql.Driver(), param))
+	}
 }
