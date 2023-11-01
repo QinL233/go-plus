@@ -156,6 +156,13 @@ func e(src io.ReadCloser) {
 	fmt.Println(len(b))
 }
 
+// @Tags 下载
+// @Summary 压缩一张图片
+// @Produce  json
+// @Param title body DemoParam true "param"
+// @Success 200 {object} web.Response
+// @Failure 500 {object} web.Response
+// @Router /download [post]
 func download(c *gin.Context) {
 	object := "2023/09/20/31e495f9-ecf2-4961-9fb5-788fc9bc95a5/2022航天领航者计划招商宣讲.mp4"
 	//minio.DownloadGin(c, object, false)
@@ -182,8 +189,21 @@ func TestWeb(t *testing.T) {
 	//2、使用table自定义router
 	web.Controller(func(g *gin.RouterGroup) {
 		g.GET("/download", download)
+		g.POST("/upload2", func(c *gin.Context) {
+			web.AsyncFormFile(c, func(filename string, size int64, file io.Reader) {
+				object := minio.Upload(filename, file)
+				web.Success(c, object)
+			})
+		})
+		g.POST("/upload3", func(c *gin.Context) {
+			web.AsyncFormFile(c, func(filename string, size int64, file io.Reader) {
+				object := minio.UploadForward(filename, size, file)
+				web.Success(c, object)
+			})
+		})
 	})
 	app.Start(func(r *gin.Engine) {
-		//swagger.Init(r, docs.SwaggerInfo)
+		//此处初始化swagger文档
+		//swagger.Init(r, doc)
 	}, "config/app.yml")
 }
