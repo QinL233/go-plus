@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"time"
 )
 
 /**
@@ -91,15 +92,17 @@ func Server[P any, R any](c *gin.Context, f func(db *gorm.DB, param P) R) {
 	//3.回调server方法并返回封装
 	if log.Driver() != nil {
 		//将输入输出打印到日志中
+		begin := time.Now()
 		r := f(mysql.Driver(), param)
 		log.Driver().WithFields(logrus.Fields{
-			"client": c.ClientIP(),
-			"code":   c.Writer.Status(),
-			"header": c.Request.Header,
-			"method": c.Request.Method,
-			"url":    c.Request.URL.Path,
-			"param":  param,
-			"result": r,
+			"client":    c.ClientIP(),
+			"code":      c.Writer.Status(),
+			"header":    c.Request.Header,
+			"method":    c.Request.Method,
+			"url":       c.Request.URL.Path,
+			"consuming": time.Now().Sub(begin),
+			"param":     param,
+			"result":    r,
 		}).Info()
 		Success(c, r)
 	} else {
