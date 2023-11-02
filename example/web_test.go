@@ -1,6 +1,8 @@
 package example
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"github.com/QinL233/go-plus"
 	"github.com/QinL233/go-plus/oss/minio"
@@ -194,6 +196,16 @@ func TestWeb(t *testing.T) {
 				object := minio.UploadForward(filename, size, file)
 				web.Success(c, object)
 			})
+		})
+		g.POST("/uploads", func(c *gin.Context) {
+			list := make([]string, 0)
+			web.BindMultipartFiles(c, func(filename string, file io.Reader) {
+				b, _ := ioutil.ReadAll(file)
+				sha := sha256.New()
+				io.Copy(sha, bytes.NewReader(b))
+				list = append(list, fmt.Sprintf("%x", sha.Sum(nil)))
+			})
+			web.Success(c, list)
 		})
 	})
 	app.Start(func(r *gin.Engine) {
