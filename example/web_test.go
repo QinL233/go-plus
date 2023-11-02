@@ -189,14 +189,8 @@ func TestWeb(t *testing.T) {
 	//2、使用table自定义router
 	web.Controller(func(g *gin.RouterGroup) {
 		g.GET("/download", download)
-		g.POST("/upload2", func(c *gin.Context) {
-			web.AsyncFormFile(c, func(filename string, size int64, file io.Reader) {
-				object := minio.Upload(filename, file)
-				web.Success(c, object)
-			})
-		})
-		g.POST("/upload3", func(c *gin.Context) {
-			web.AsyncFormFile(c, func(filename string, size int64, file io.Reader) {
+		g.POST("/upload", func(c *gin.Context) {
+			web.BindMultipartFile(c, func(filename string, size int64, file io.Reader) {
 				object := minio.UploadForward(filename, size, file)
 				web.Success(c, object)
 			})
