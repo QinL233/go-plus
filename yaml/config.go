@@ -21,6 +21,7 @@ type Yaml struct {
 			Username string `yaml:"username"`
 			Password string `yaml:"password"`
 			Database string `yaml:"database"`
+			Charset  string `yaml:"charset"`
 		} `yaml:"mysql"`
 		Elastic struct {
 			Url string `yaml:"url"`

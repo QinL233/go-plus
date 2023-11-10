@@ -19,18 +19,22 @@ func Init() {
 		log.Println("mysql config is empty !")
 		return
 	}
+	if config.Charset == "" {
+		config.Charset = "utf8"
+	}
 	logMode := logger.Warn
 	if yaml.Config.Web.Mode != gin.ReleaseMode {
 		logMode = logger.Info
 	}
 	var err error
 	//createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&useAffectedRows=true
-	driver, err = gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
+	driver, err = gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
 		config.Username,
 		config.Password,
 		config.Host,
 		config.Port,
-		config.Database)),
+		config.Database,
+		config.Charset)),
 		&gorm.Config{
 			Logger: logger.Default.LogMode(logMode), //日志级别
 			NamingStrategy: schema.NamingStrategy{
@@ -55,7 +59,7 @@ func Init() {
 	log.Println("mysql connect success!")
 }
 
-//从连接池获取连接
+// 从连接池获取连接
 func Driver() *gorm.DB {
 	return driver
 }
