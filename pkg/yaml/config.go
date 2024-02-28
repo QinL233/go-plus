@@ -26,6 +26,13 @@ type Yaml struct {
 		Elastic struct {
 			Url string `yaml:"url"`
 		} `yaml:"elastic"`
+		Clickhouse struct {
+			Host     string `yaml:"host"`
+			Port     int    `yaml:"port"`
+			Username string `yaml:"username"`
+			Password string `yaml:"password"`
+			Database string `yaml:"database"`
+		} `yaml:"clickhouse"`
 	} `yaml:"orm"`
 	Cache struct {
 		Redis struct {
